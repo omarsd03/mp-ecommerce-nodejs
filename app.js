@@ -25,29 +25,37 @@ const crearPreferencia = (producto) => {
       items: [
         {
           title: producto.title,
-          unit_price: producto.price,
-          quantity: producto.unit
+          unit_price: parseFloat(producto.price),
+          quantity: parseInt(producto.unit)
         },
       ],
     };
 
-    return mercadopago.preferences.create(preferencia).then(function (response) {
-        // Este valor reemplazará el string "<%= global.id %>" en tu HTML
-        return global.id = response.body.id;
-    }).catch(function (error) {
-        console.log(error);
-    });
+    return preferencia;
 
 };
-
 
 app.get('/', function (req, res) {
     res.render('home');
 });
 
-app.get('/detail', function (req, res) {
+app.get('/detail', async function (req, res) {
+
     const preferencia = crearPreferencia(req.query);
-    res.render('detail', req.query);
+
+    await mercadopago.preferences.create(preferencia).then(function (response) {
+
+      // Este valor reemplazará el string "<%= global.id %>" en tu HTML
+      let respuesta = req.query;
+      global.id = response.body.id;
+
+      respuesta.global_id = global.id
+      res.render('detail', req.query);
+      
+    }).catch(function (error) {
+      console.log(error);
+    });
+
 });
 
 app.use(express.static('assets'));
